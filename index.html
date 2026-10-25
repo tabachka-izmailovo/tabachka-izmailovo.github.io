@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vape Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="home-page" class="page">
+        <div class="top-bar">
+            <span>г. Москва, Измайловский проезд, 5а</span>
+        </div>
+        <section class="search-section">
+            <input type="text" id="home-search" placeholder="Поиск по товарам...">
+        </section>
+        
+        <!-- Сюда скрипт будет вставлять баннеры из базы -->
+        <div class="hero-carousel" id="hero-carousel"></div>
+
+        <h2 class="section-title">Популярные товары</h2>
+        <main id="popular-grid" class="grid"></main>
+    </div>
+
+    <div id="catalog-page" class="page hidden">
+        <div class="top-bar">
+            <button class="back-to-home-btn">← На главную</button>
+        </div>
+        <section class="search-section">
+            <input type="text" id="catalog-search" placeholder="Поиск по каталогу...">
+        </section>
+        <section class="filters-section">
+            <button class="filter-btn active" data-category="all">Все</button>
+            <button class="filter-btn" data-category="Электронные сигареты">Электронные сигареты</button>
+            <button class="filter-btn" data-category="Pod-системы">Pod-системы</button>
+            <button class="filter-btn" data-category="Картриджи-испарители">Картриджи-испарители</button>
+            <button class="filter-btn" data-category="Аксессуары">Аксессуары</button>
+            <button class="filter-btn" data-category="Снюсы">Снюсы</button>
+            <button class="filter-btn" data-category="Аксессуары для кальяна">Аксессуары для кальяна</button>
+            <button class="filter-btn" data-category="Аксессуары-сигары">Аксессуары-сигары</button>
+            <button class="filter-btn" data-category="Табаки для кальяна">Табаки для кальяна</button>
+            <button class="filter-btn" data-category="Кальяны">Кальяны</button>
+            <button class="filter-btn" data-category="Жидкости">Жидкости</button>
+            <button class="filter-btn" data-category="Сигареты">Сигареты</button>
+        </section>
+        <div id="brands-panel" class="brands-panel hidden">
+            <span class="brands-label">Бренды:</span>
+            <div class="brands-list">
+                <button class="brand-btn active" data-brand="all">Все</button>
+                <button class="brand-btn" data-brand="Pafos">Pafos</button>
+                <button class="brand-btn" data-brand="Waka">Waka</button>
+                <button class="brand-btn" data-brand="Lost Mary">Lost Mary</button>
+                <button class="brand-btn" data-brand="Inflave">Inflave</button>
+                <button class="brand-btn" data-brand="Puffmi">Puffmi</button>
+                <button class="brand-btn" data-brand="Plonq">Plonq</button>
+                <button class="brand-btn" data-brand="Gang">Gang</button>
+                <button class="brand-btn" data-brand="HQD">HQD</button>
+                <button class="brand-btn" data-brand="Roqy">Roqy</button>
+                <button class="brand-btn" data-brand="Qwerty">Qwerty</button>
+            </div>
+        </div>
+        <main id="catalog-grid" class="grid"></main>
+    </div>
+
+    <div id="product-page" class="page hidden">
+        <button class="back-to-prev-btn">← Назад</button>
+        <img id="pp-image" class="pp-image" src="" alt="Товар">
+        <h1 id="pp-title" class="pp-title"></h1>
+        <p id="pp-price" class="pp-price"></p>
+        <div class="pp-section" id="desc-section">
+            <h3>Описание</h3>
+            <p id="pp-desc"></p>
+        </div>
+        <div class="pp-section" id="specs-section">
+            <h3>Характеристики</h3>
+            <ul id="pp-specs" class="specs-list"></ul>
+        </div>
+        <div class="pp-section" id="pp-options-block">
+            <h3 id="pp-options-title">Опции</h3>
+            <div id="pp-flavors" class="flavors-container"></div>
+        </div>
+    </div>
+
+    <div id="image-modal" class="image-modal hidden">
+        <span class="close-image">&times;</span>
+        <img id="full-image" src="" alt="Фото товара">
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
