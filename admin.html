@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админка - Vape Shop</title>
+    <style>
+        body { background-color: #121212; color: white; font-family: Arial, sans-serif; padding: 15px; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px rgba(157, 78, 221, 0.3); margin-bottom: 20px; }
+        h1, h2 { color: #9d4edd; text-align: center; }
+        h2 { font-size: 18px; margin-bottom: 15px; }
+        
+        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 10px; background: #121212; border: 1px solid #333; color: white; border-radius: 5px; box-sizing: border-box; font-family: Arial, sans-serif; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #9d4edd; }
+        
+        button { width: 100%; padding: 12px; background: #9d4edd; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-bottom: 10px; }
+        button:hover { background: #7b33b8; }
+        button.delete-btn { background: #f87171; }
+        button.delete-btn:hover { background: #dc2626; }
+        #cancel-btn { background: #555; display: none; }
+        #cancel-btn:hover { background: #333; }
+        
+        #status, #banner-status { text-align: center; margin-top: 10px; font-weight: bold; font-size: 14px; }
+        
+        .product-item { background: #121212; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #9d4edd; }
+        .product-info { flex-grow: 1; }
+        .product-info h4 { margin: 0 0 5px 0; font-size: 14px; }
+        .product-info p { margin: 0; color: #9d4edd; font-size: 14px; font-weight: bold; }
+        .actions { display: flex; gap: 5px; }
+        .actions button { width: auto; padding: 5px 10px; font-size: 12px; margin: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- БЛОК БАННЕРОВ -->
+    <div class="card" style="border: 1px solid #9d4edd;">
+        <h1>Баннеры на главной</h1>
+        <input type="text" id="b-title" placeholder="Заголовок">
+        <input type="text" id="b-subtitle" placeholder="Подзаголовок">
+        <input type="text" id="b-btn" placeholder="Текст кнопки (Смотреть)">
+        <input type="text" id="b-image" placeholder="Ссылка на фон (необязательно)">
+        <button id="add-banner-btn">Добавить баннер</button>
+        <div id="banner-status"></div>
+        
+        <h2 style="margin-top: 20px;">Текущие баннеры</h2>
+        <div id="banner-list">Загрузка...</div>
+    </div>
+
+    <!-- БЛОК ДОБАВЛЕНИЯ/РЕДАКТИРОВАНИЯ ТОВАРА -->
+    <div class="card">
+        <h1 id="form-title">Добавить товар</h1>
+        <input type="text" id="name" placeholder="Название">
+        <input type="text" id="brand" placeholder="Бренд">
+        <select id="category">
+            <option value="Электронные сигареты">Электронные сигареты</option>
+            <option value="Pod-системы">Pod-системы</option>
+            <option value="Картриджи-испарители">Картриджи-испарители</option>
+            <option value="Аксессуары">Аксессуары</option>
+            <option value="Снюсы">Снюсы</option>
+            <option value="Аксессуары для кальяна">Аксессуары для кальяна</option>
+            <option value="Аксессуары-сигары">Аксессуары-сигары</option>
+            <option value="Табаки для кальяна">Табаки для кальяна</option>
+            <option value="Кальяны">Кальяны</option>
+            <option value="Жидкости">Жидкости</option>
+            <option value="Сигареты">Сигареты</option>
+        </select>
+        <input type="number" id="price" placeholder="Цена">
+        <input type="text" id="image_url" placeholder="Ссылка на фото (images/photo.jpg)">
+        <textarea id="description" rows="2" placeholder="Описание"></textarea>
+        <textarea id="specs" rows="2" placeholder="Характеристики (Ключ: Значение)"></textarea>
+        <textarea id="flavors" rows="2" placeholder="Вкусы (через запятую)"></textarea>
+        <select id="in_stock">
+            <option value="true">В наличии</option>
+            <option value="false">Нет в наличии</option>
+        </select>
+        
+        <button id="save-btn">Добавить товар</button>
+        <button id="cancel-btn">Отменить редактирование</button>
+        <div id="status"></div>
+    </div>
+
+    <!-- СПИСОК ТОВАРОВ -->
+    <div class="card">
+        <h2>Список товаров</h2>
+        <div id="product-list">Загрузка...</div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB_MGgecc7XzdMy93d2l_C2l11mBz_oRGU",
+        authDomain: "tabachka-shop-f17fe.firebaseapp.com",
+        projectId: "tabachka-shop-f17fe",
+        storageBucket: "tabachka-shop-f17fe.firebasestorage.app",
+        messagingSenderId: "304068875080",
+        appId: "1:304068875080:web:cf4f97bb22ef1cc19b997d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let editingId = null; 
+
+    // --- ЛОГИКА БАННЕРОВ ---
+    document.getElementById("add-banner-btn").addEventListener("click", async () => {
+        const title = document.getElementById("b-title").value;
+        const subtitle = document.getElementById("b-subtitle").value;
+        const btn_text = document.getElementById("b-btn").value;
+        const image_url = document.getElementById("b-image").value;
+        const statusDiv = document.getElementById("banner-status");
+
+        if (!title) { statusDiv.innerText = "Введите заголовок!"; statusDiv.style.color = "#f87171"; return; }
+        try {
+            await addDoc(collection(db, "banners"), { title, subtitle, btn_text, image_url });
+            statusDiv.innerText = "✅ Баннер добавлен!"; statusDiv.style.color = "#4ade80";
+            document.getElementById("b-title").value = ""; document.getElementById("b-subtitle").value = "";
+            document.getElementById("b-btn").value = ""; document.getElementById("b-image").value = "";
+            loadBannersList();
+        } catch (e) { statusDiv.innerText = "❌ Ошибка!"; statusDiv.style.color = "#f87171"; }
+    });
+
+    async function loadBannersList() {
+        const listDiv = document.getElementById("banner-list");
+        listDiv.innerHTML = "";
+        const querySnapshot = await getDocs(collection(db, "banners"));
+        if (querySnapshot.empty) { listDiv.innerHTML = "Нет баннеров."; return; }
+        
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const item = document.createElement("div");
+            item.className = "product-item";
+            item.innerHTML = `
+                <div class="product-info"><h4>${data.title}</h4><p>${data.subtitle}</p></div>
+                <div class="actions"><button class="delete-btn del-banner-btn" data-id="${docSnap.id}">Удалить</button></div>
+            `;
+            listDiv.appendChild(item);
+        });
+        
+        document.querySelectorAll(".del-banner-btn").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                if (confirm("Удалить баннер?")) { 
+                    await deleteDoc(doc(db, "banners", e.target.getAttribute("data-id"))); 
+                    loadBannersList(); 
+                }
+            });
+        });
+    }
+
+    // --- ЛОГИКА ТОВАРОВ ---
+    document.getElementById("save-btn").addEventListener("click", async () => {
+        const name = document.getElementById("name").value;
+        const brand = document.getElementById("brand").value;
+        const category = document.getElementById("category").value;
+        const price = Number(document.getElementById("price").value);
+        const image_url = document.getElementById("image_url").value;
+        const description = document.getElementById("description").value;
+        const in_stock = document.getElementById("in_stock").value === "true";
+        const statusDiv = document.getElementById("status");
+
+        const specsText = document.getElementById("specs").value;
+        const specs = {};
+        if (specsText.trim() !== "") {
+            specsText.split("\n").forEach(line => {
+                const parts = line.split(":");
+                if (parts.length >= 2) specs[parts[0].trim()] = parts.slice(1).join(":").trim();
+            });
+        }
+
+        const flavorsText = document.getElementById("flavors").value;
+        const flavors = flavorsText ? flavorsText.split(",").map(f => f.trim()).filter(f => f !== "") : [];
+
+        if (!name || !price) { statusDiv.innerText = "Заполните название и цену!"; statusDiv.style.color = "#f87171"; return; }
+
+        const productData = { name, brand, category, price, image_url, description, in_stock, specs, flavors };
+
+        try {
+            if (editingId) {
+                await updateDoc(doc(db, "products", editingId), productData);
+                statusDiv.innerText = "✅ Товар обновлен!";
+            } else {
+                productData.created_at = new Date();
+                await addDoc(collection(db, "products"), productData);
+                statusDiv.innerText = "✅ Товар добавлен!";
+            }
+            statusDiv.style.color = "#4ade80";
+            resetForm();
+            loadProductsList(); 
+        } catch (e) { statusDiv.innerText = "❌ Ошибка!"; statusDiv.style.color = "#f87171"; }
+    });
+
+    document.getElementById("cancel-btn").addEventListener("click", resetForm);
+
+    function resetForm() {
+        editingId = null;
+        document.getElementById("form-title").innerText = "Добавить товар";
+        document.getElementById("save-btn").innerText = "Добавить товар";
+        document.getElementById("cancel-btn").style.display = "none";
+        document.getElementById("name").value = ""; document.getElementById("brand").value = "";
+        document.getElementById("price").value = ""; document.getElementById("image_url").value = "";
+        document.getElementById("description").value = ""; document.getElementById("specs").value = "";
+        document.getElementById("flavors").value = ""; document.getElementById("status").innerText = "";
+    }
+
+    async function loadProductsList() {
+        const listDiv = document.getElementById("product-list");
+        listDiv.innerHTML = "Загрузка...";
+        const querySnapshot = await getDocs(collection(db, "products"));
+        listDiv.innerHTML = "";
+        
+        if (querySnapshot.empty) { listDiv.innerHTML = "Нет товаров."; return; }
+        
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const item = document.createElement("div");
+            item.className = "product-item";
+            item.innerHTML = `
+                <div class="product-info"><h4>${data.name}</h4><p>${data.price} ₽</p></div>
+                <div class="actions">
+                    <button class="edit-btn" data-id="${docSnap.id}">Изменить</button>
+                    <button class="delete-btn del-prod-btn" data-id="${docSnap.id}">Удалить</button>
+                </div>
+            `;
+            listDiv.appendChild(item);
+        });
+
+        document.querySelectorAll(".edit-btn").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const id = e.target.getAttribute("data-id");
+                const docRef = doc(db, "products", id);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById("name").value = data.name;
+                    document.getElementById("brand").value = data.brand || "";
+                    document.getElementById("category").value = data.category;
+                    document.getElementById("price").value = data.price;
+                    document.getElementById("image_url").value = data.image_url || "";
+                    document.getElementById("description").value = data.description || "";
+                    document.getElementById("in_stock").value = data.in_stock ? "true" : "false";
+                    
+                    let specsText = "";
+                    if (data.specs) { for (let key in data.specs) { specsText += `${key}: ${data.specs[key]}\n`; } }
+                    document.getElementById("specs").value = specsText;
+                    document.getElementById("flavors").value = data.flavors ? data.flavors.join(", ") : "";
+
+                    editingId = id;
+                    document.getElementById("form-title").innerText = "Редактировать товар";
+                    document.getElementById("save-btn").innerText = "Сохранить изменения";
+                    document.getElementById("cancel-btn").style.display = "block";
+                    
+                    document.getElementById("name").scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        });
+
+        document.querySelectorAll(".del-prod-btn").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                if (confirm("Удалить товар?")) { 
+                    await deleteDoc(doc(db, "products", e.target.getAttribute("data-id"))); 
+                    loadProductsList(); 
+                }
+            });
+        });
+    }
+    
+    loadBannersList();
+    loadProductsList();
+</script>
+</body>
+</html>
